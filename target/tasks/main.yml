@@ -1,0 +1,61 @@
+---
+# tasks file for target
+- name: Write targets
+  ansible.builtin.copy:
+    src: files/targets
+    dest: /root/targets
+    owner: root
+    group: root
+    mode: '0644'
+
+- ansible.posix.sysctl:
+    name: fs.file-max
+    value: '500000'
+    state: present
+
+- ansible.posix.sysctl:
+    name: net.ipv4.tcp_tw_reuse
+    value: '1'
+    state: present
+
+- pam_limits:
+    domain: '*'
+    limit_type: soft
+    limit_item: nofile
+    value: '500000'
+
+- pam_limits:
+    domain: '*'
+    limit_type: hard
+    limit_item: nofile
+    value: '500000'
+
+- pam_limits:
+    domain: root
+    limit_type: soft
+    limit_item: nofile
+    value: '500000'
+
+- pam_limits:
+    domain: root
+    limit_type: hard
+    limit_item: nofile
+    value: '500000'
+
+- name: Install wget
+  yum:
+    pkg:
+    - wget
+
+- name: Download vegeta
+  get_url:
+    url: https://github.com/tsenart/vegeta/releases/download/v12.8.4/vegeta_12.8.4_linux_amd64.tar.gz
+    dest: /tmp/vegeta.tgz
+    mode: '0644' 
+
+- name: Extract /tmp/vegeta.tgz to /usr/bin/vegeta
+  ansible.builtin.unarchive:
+    src: /tmp/vegeta.tgz
+    dest: /usr/bin
+    mode: '0755'
+    remote_src: yes
